@@ -17,7 +17,6 @@ var (
 )
 
 func Open(cfg config.Config) (*sql.DB, error) {
-	fmt.Printf("\nDB | %+v", cfg.DB)
 	db, err := sql.Open("postgres", fmt.Sprintf("user=postgres password=%s host=%s port=5432 dbname=postgres", cfg.DB.Password, cfg.DB.Host))
 	if err != nil {
 		return nil, err
