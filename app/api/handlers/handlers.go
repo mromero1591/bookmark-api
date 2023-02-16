@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/mromero1591/bookmark-api/business/sys/metrics"
+	"github.com/mromero1591/bookmark-api/business/users"
 	"github.com/mromero1591/bookmark-api/business/web/mid"
 	"github.com/mromero1591/web-foundation/auth"
 	"github.com/mromero1591/web-foundation/web"
@@ -26,10 +27,11 @@ func WithCORS(origin string) func(opts *Options) {
 
 // APIMuxConfig contains all the mandatory systems required by handlers.
 type APIMuxConfig struct {
-	Shutdown chan os.Signal
-	Log      *zap.SugaredLogger
-	Metrics  *metrics.Metrics
-	Auth     *auth.Auth
+	Shutdown    chan os.Signal
+	Log         *zap.SugaredLogger
+	Metrics     *metrics.Metrics
+	Auth        *auth.Auth
+	UserService users.UserService
 }
 
 // APIMux constructs an http.Handler with all application routes defined.
@@ -49,7 +51,7 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	)
 
 	//handler setups
-	SetupNoAuthHandler(app, cfg.Auth)
+	SetupNoAuthHandler(app, cfg.Auth, cfg.UserService)
 
 	// Accept CORS 'OPTIONS' preflight requests if config has been provided.
 	// Don't forget to apply the CORS middleware to the routes that need it.

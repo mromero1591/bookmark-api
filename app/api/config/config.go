@@ -22,6 +22,16 @@ type Config struct {
 		Algorithm  string `conf:"default:HS256"`
 		SigningKey string `conf:"env:JWT_SIGNING_KEY"`
 	}
+
+	DB struct {
+		User         string `conf:"default:postgres,env:DB_USER"`
+		Password     string `conf:"default:postgres,mask,env:SQL_PWD"`
+		Host         string `conf:"default:db,env:SQL_HOST"`
+		DBName       string `conf:"default:bookmarks,env:SQL_DB_NAME"`
+		MaxIdleConns int    `conf:"default:2"`
+		MaxOpenConns int    `conf:"default:0"`
+		DisableTLS   bool   `conf:"default:true"`
+	}
 }
 
 func Initialize() (Config, error) {
@@ -45,6 +55,12 @@ func Initialize() (Config, error) {
 	//setup auth
 	cfg.Auth.Algorithm = getEnvOrDefault("", "HS256")
 	cfg.Auth.SigningKey = getEnvOrDefault("JWT_SIGNING_KEY", "")
+
+	//setup db
+	cfg.DB.User = getEnvOrDefault("DB_USER", "postgres")
+	cfg.DB.Password = getEnvOrDefault("SQL_PWD", "pg")
+	cfg.DB.Host = getEnvOrDefault("SQL_HOST", "empty")
+	cfg.DB.DBName = getEnvOrDefault("SQL_DB_NAME", "bookmarks")
 
 	return cfg, nil
 }
