@@ -11,6 +11,7 @@ import (
 
 	"github.com/mromero1591/bookmark-api/app/api/config"
 	"github.com/mromero1591/bookmark-api/app/api/handlers"
+	"github.com/mromero1591/bookmark-api/business/bookmark"
 	"github.com/mromero1591/bookmark-api/business/category"
 	dbSetup "github.com/mromero1591/bookmark-api/business/database"
 	"github.com/mromero1591/bookmark-api/business/sys/metrics"
@@ -71,6 +72,9 @@ func run(log *zap.SugaredLogger) error {
 	categoryStore := category.NewStore(queries)
 	categoryService := category.NewCategoryService(categoryStore)
 
+	bookmarkStore := bookmark.NewStore(queries)
+	bookmarkService := bookmark.NewBookmarkService(bookmarkStore)
+
 	// ========================================================================
 	// Initialize authentication support
 	log.Infow("startup", "status", "initializing authentication support")
@@ -97,6 +101,7 @@ func run(log *zap.SugaredLogger) error {
 		Auth:            a,
 		UserService:     userService,
 		CategoryService: categoryService,
+		BookmarkService: bookmarkService,
 	}
 	apiMux := handlers.APIMux(
 		apiConfig,

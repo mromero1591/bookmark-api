@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/mromero1591/bookmark-api/business/bookmark"
 	"github.com/mromero1591/bookmark-api/business/category"
 	"github.com/mromero1591/bookmark-api/business/sys/metrics"
 	"github.com/mromero1591/bookmark-api/business/users"
@@ -34,6 +35,7 @@ type APIMuxConfig struct {
 	Auth            *auth.Auth
 	UserService     users.UserService
 	CategoryService category.CategoryService
+	BookmarkService bookmark.BookmarkService
 }
 
 // APIMux constructs an http.Handler with all application routes defined.
@@ -55,6 +57,7 @@ func APIMux(cfg APIMuxConfig, options ...func(opts *Options)) http.Handler {
 	//handler setups
 	SetupNoAuthHandler(app, cfg.Auth, cfg.UserService)
 	SetupCategoryHandler(app, cfg.Auth, cfg.CategoryService)
+	SetupBookmarkHandler(app, cfg.Auth, cfg.BookmarkService)
 
 	// Accept CORS 'OPTIONS' preflight requests if config has been provided.
 	// Don't forget to apply the CORS middleware to the routes that need it.
