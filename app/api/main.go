@@ -11,6 +11,7 @@ import (
 
 	"github.com/mromero1591/bookmark-api/app/api/config"
 	"github.com/mromero1591/bookmark-api/app/api/handlers"
+	"github.com/mromero1591/bookmark-api/business/category"
 	dbSetup "github.com/mromero1591/bookmark-api/business/database"
 	"github.com/mromero1591/bookmark-api/business/sys/metrics"
 	"github.com/mromero1591/bookmark-api/business/users"
@@ -67,6 +68,9 @@ func run(log *zap.SugaredLogger) error {
 	userStore := users.NewStore(queries)
 	userService := users.NewUserService(userStore)
 
+	categoryStore := category.NewStore(queries)
+	categoryService := category.NewCategoryService(categoryStore)
+
 	// ========================================================================
 	// Initialize authentication support
 	log.Infow("startup", "status", "initializing authentication support")
@@ -87,11 +91,12 @@ func run(log *zap.SugaredLogger) error {
 
 	// Construct the mux for the API calls.
 	apiConfig := handlers.APIMuxConfig{
-		Shutdown:    shutdown,
-		Log:         log,
-		Metrics:     metrics.New(),
-		Auth:        a,
-		UserService: userService,
+		Shutdown:        shutdown,
+		Log:             log,
+		Metrics:         metrics.New(),
+		Auth:            a,
+		UserService:     userService,
+		CategoryService: categoryService,
 	}
 	apiMux := handlers.APIMux(
 		apiConfig,

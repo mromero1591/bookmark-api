@@ -13,6 +13,79 @@ import (
 	"github.com/google/uuid"
 )
 
+const createBookmark = `-- name: CreateBookmark :one
+INSERT INTO bookmark (id, url, name, logo, category_id, user_id, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, url, name, logo, category_id, user_id, created_at, updated_at
+`
+
+type CreateBookmarkParams struct {
+	ID         uuid.UUID
+	Url        string
+	Name       string
+	Logo       sql.NullString
+	CategoryID uuid.UUID
+	UserID     uuid.UUID
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+func (q *Queries) CreateBookmark(ctx context.Context, arg CreateBookmarkParams) (Bookmark, error) {
+	row := q.db.QueryRowContext(ctx, createBookmark,
+		arg.ID,
+		arg.Url,
+		arg.Name,
+		arg.Logo,
+		arg.CategoryID,
+		arg.UserID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var i Bookmark
+	err := row.Scan(
+		&i.ID,
+		&i.Url,
+		&i.Name,
+		&i.Logo,
+		&i.CategoryID,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createCategory = `-- name: CreateCategory :one
+INSERT INTO category (id, name, user_id, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5) RETURNING id, name, user_id, created_at, updated_at
+`
+
+type CreateCategoryParams struct {
+	ID        uuid.UUID
+	Name      string
+	UserID    uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error) {
+	row := q.db.QueryRowContext(ctx, createCategory,
+		arg.ID,
+		arg.Name,
+		arg.UserID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createUserAccount = `-- name: CreateUserAccount :one
 INSERT INTO user_accounts (id, email, name, pwd_hash, created_at, updated_at) 
 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, email, name, pwd_hash, created_at, updated_at
@@ -55,6 +128,75 @@ func (q *Queries) CreateUserAccount(ctx context.Context, arg CreateUserAccountPa
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getBookmarkByUserID = `-- name: GetBookmarkByUserID :many
+SELECT id, url, name, logo, category_id, user_id, created_at, updated_at FROM bookmark WHERE user_id = $1
+`
+
+func (q *Queries) GetBookmarkByUserID(ctx context.Context, userID uuid.UUID) ([]Bookmark, error) {
+	rows, err := q.db.QueryContext(ctx, getBookmarkByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Bookmark
+	for rows.Next() {
+		var i Bookmark
+		if err := rows.Scan(
+			&i.ID,
+			&i.Url,
+			&i.Name,
+			&i.Logo,
+			&i.CategoryID,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCategoryByUserID = `-- name: GetCategoryByUserID :many
+SELECT id, name, user_id, created_at, updated_at FROM category WHERE user_id = $1
+`
+
+func (q *Queries) GetCategoryByUserID(ctx context.Context, userID uuid.UUID) ([]Category, error) {
+	rows, err := q.db.QueryContext(ctx, getCategoryByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Category
+	for rows.Next() {
+		var i Category
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserAccountByEmail = `-- name: GetUserAccountByEmail :one
