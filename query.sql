@@ -18,3 +18,9 @@ SELECT id, name, user_id, created_at, updated_at FROM category WHERE user_id = $
 
 -- name: GetBookmarkByUserID :many
 SELECT id, url, name, logo, category_id, user_id, created_at, updated_at FROM bookmark WHERE user_id = $1;
+
+-- name: DeleteBookmark :exec
+DELETE FROM bookmark WHERE id = $1;
+
+-- name: DeleteCategory :exec
+DELETE FROM category WHERE id = $1;

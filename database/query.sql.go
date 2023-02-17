@@ -130,6 +130,24 @@ func (q *Queries) CreateUserAccount(ctx context.Context, arg CreateUserAccountPa
 	return i, err
 }
 
+const deleteBookmark = `-- name: DeleteBookmark :exec
+DELETE FROM bookmark WHERE id = $1
+`
+
+func (q *Queries) DeleteBookmark(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteBookmark, id)
+	return err
+}
+
+const deleteCategory = `-- name: DeleteCategory :exec
+DELETE FROM category WHERE id = $1
+`
+
+func (q *Queries) DeleteCategory(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteCategory, id)
+	return err
+}
+
 const getBookmarkByUserID = `-- name: GetBookmarkByUserID :many
 SELECT id, url, name, logo, category_id, user_id, created_at, updated_at FROM bookmark WHERE user_id = $1
 `

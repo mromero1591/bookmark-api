@@ -59,6 +59,7 @@ func Extract(resp io.Reader) *HTMLMeta {
 					hm.SiteName = ogSiteName
 				}
 			}
+
 		case html.TextToken:
 			if titleFound {
 				t := z.Token()
@@ -67,7 +68,6 @@ func Extract(resp io.Reader) *HTMLMeta {
 			}
 		}
 	}
-	return hm
 }
 
 func extractMetaProperty(t html.Token, prop string) (content string, ok bool) {

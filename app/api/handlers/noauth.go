@@ -29,6 +29,7 @@ func SetupNoAuthHandler(app *web.App, auth *auth.Auth, userService users.UserSer
 	//health
 	app.Handle(http.MethodGet, "/health", ng.health, mid.Cors("*"))
 	app.Handle(http.MethodPost, "/v1/signup", ng.signUp, mid.Cors("*"))
+	app.Handle(http.MethodPost, "/v1/login", ng.login, mid.Cors("*"))
 
 	return nil
 }
@@ -80,4 +81,58 @@ func (ng noauthHandler) signUp(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	return web.Respond(ctx, w, response, http.StatusCreated)
+}
+
+func (ng noauthHandler) login(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	login := struct {
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required"`
+	}{}
+	if err := web.Decode(r, &login); err != nil {
+		err := errors.New("must provide email and password when signing in")
+		return validate.NewRequestError(err, http.StatusUnauthorized)
+	}
+
+	if err := validate.Check(login); err != nil {
+		err := errors.New("must provide email and password in Basic auth")
+		return validate.NewRequestError(err, http.StatusBadRequest)
+	}
+
+	claims, err := ng.userService.Authenticate(ctx, login.Email, login.Password)
+	if err != nil {
+		switch errors.Cause(err) {
+		case dbSetup.ErrNotFound:
+			return validate.NewRequestError(err, http.StatusNotFound)
+		case dbSetup.ErrAuthenticationFailure:
+			return validate.NewRequestError(err, http.StatusUnauthorized)
+		default:
+			return errors.Wrap(err, "authenticating")
+		}
+	}
+
+	var tkn struct {
+		Token string `json:"token"`
+	}
+
+	tkn.Token, err = ng.auth.GenerateToken(claims)
+	if err != nil {
+		return errors.Wrap(err, "generating token")
+	}
+
+	//get the user data
+	usr, _ := ng.userService.GetUserAccountByEmail(ctx, login.Email)
+	if err != nil {
+		return errors.Wrap(err, "could not find user")
+	}
+
+	response := struct {
+		Token string     `json:"token"`
+		User  users.User `json:"user"`
+	}{
+		Token: tkn.Token,
+		User:  usr,
+	}
+
+	return web.Respond(ctx, w, response, http.StatusOK)
+
 }

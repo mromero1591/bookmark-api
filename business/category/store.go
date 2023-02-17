@@ -56,3 +56,12 @@ func (s Store) QueryCategoryByUserID(ctx context.Context, userID uuid.UUID) ([]C
 
 	return categories, nil
 }
+
+func (s Store) DeleteCategory(ctx context.Context, id uuid.UUID) error {
+
+	if err := s.db.DeleteCategory(ctx, id); err != nil {
+		return err
+	}
+
+	return nil
+}

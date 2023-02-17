@@ -2,6 +2,7 @@ package category
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,6 +13,7 @@ import (
 type StoreAPI interface {
 	CreateCategory(ctx context.Context, cat Category) error
 	QueryCategoryByUserID(ctx context.Context, userID uuid.UUID) ([]Category, error)
+	DeleteCategory(ctx context.Context, id uuid.UUID) error
 }
 
 type CategoryService struct {
@@ -29,7 +31,7 @@ func (s CategoryService) CreateCategory(ctx context.Context, new CreateCategory)
 
 	cat := Category{
 		ID:        uuid.New(),
-		Name:      new.Name,
+		Name:      strings.TrimSpace(strings.ToLower(new.Name)),
 		UserID:    new.UserID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -49,4 +51,12 @@ func (s CategoryService) QueryCategoryByUserID(ctx context.Context, userID uuid.
 	}
 
 	return categories, nil
+}
+
+func (s CategoryService) DeleteCategory(ctx context.Context, id uuid.UUID) error {
+	if err := s.store.DeleteCategory(ctx, id); err != nil {
+		return errors.Wrap(err, "failed to delete category")
+	}
+
+	return nil
 }

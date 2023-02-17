@@ -26,6 +26,7 @@ func (s Store) CreateBookmark(ctx context.Context, b Bookmark) error {
 		Name: b.Name,
 		Logo: sql.NullString{
 			String: b.Logo,
+			Valid:  b.Logo != "",
 		},
 		CategoryID: b.CategoryID,
 		UserID:     b.UserID,
@@ -48,9 +49,9 @@ func (s Store) QueryBookMarksByUser(ctx context.Context, userID uuid.UUID) ([]Bo
 		return nil, err
 	}
 
-	bookmarks := make([]Bookmark, len(fetchedBookmarks))
-	for i, b := range fetchedBookmarks {
-		bookmarks[i] = Bookmark{
+	bookmarks := []Bookmark{}
+	for _, b := range fetchedBookmarks {
+		bookmarks = append(bookmarks, Bookmark{
 			ID:         b.ID,
 			Url:        b.Url,
 			Name:       b.Name,
@@ -59,11 +60,16 @@ func (s Store) QueryBookMarksByUser(ctx context.Context, userID uuid.UUID) ([]Bo
 			UserID:     b.UserID,
 			CreatedAt:  b.CreatedAt,
 			UpdatedAt:  b.UpdatedAt,
-		}
-
-		return bookmarks, nil
-
+		})
 	}
 
 	return bookmarks, nil
+}
+
+func (s Store) DeleteBookmark(ctx context.Context, id uuid.UUID) error {
+	if err := s.db.DeleteBookmark(ctx, id); err != nil {
+		return err
+	}
+
+	return nil
 }

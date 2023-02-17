@@ -14,6 +14,7 @@ import (
 type StoreAPI interface {
 	CreateBookmark(ctx context.Context, b Bookmark) error
 	QueryBookMarksByUser(ctx context.Context, userID uuid.UUID) ([]Bookmark, error)
+	DeleteBookmark(ctx context.Context, id uuid.UUID) error
 }
 
 type BookmarkService struct {
@@ -27,7 +28,7 @@ func NewBookmarkService(store StoreAPI) BookmarkService {
 func (s BookmarkService) CreateBookmark(ctx context.Context, nb CreateBookMark) (Bookmark, error) {
 
 	if err := validate.Check(nb); err != nil {
-
+		return Bookmark{}, errors.Wrap(err, "invalid bookmark")
 	}
 
 	resp, err := http.Get(nb.URL)
@@ -56,4 +57,8 @@ func (s BookmarkService) CreateBookmark(ctx context.Context, nb CreateBookMark) 
 
 func (s BookmarkService) QueryBookMarksByUser(ctx context.Context, userID uuid.UUID) ([]Bookmark, error) {
 	return s.store.QueryBookMarksByUser(ctx, userID)
+}
+
+func (s BookmarkService) DeleteBookmark(ctx context.Context, id uuid.UUID) error {
+	return s.store.DeleteBookmark(ctx, id)
 }

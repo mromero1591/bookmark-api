@@ -53,6 +53,10 @@ func (s UserService) CreateUserAccount(ctx context.Context, new NewUser) (User, 
 
 }
 
+func (s UserService) GetUserAccountByEmail(ctx context.Context, email string) (User, error) {
+	return s.store.GetUserAccountByEmail(ctx, email)
+}
+
 // Authenticate finds a user by their email and verifies their password. On
 // success it returns a Claims User representing this user. The claims can be
 // used to generate a token for future authentication.
